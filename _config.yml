@@ -1,8 +1,8 @@
 # Site settings
 title: Bachue @ GitCafe.com
 email: bachue.shu@gmail.com
-description: 
-  Bachue 在 GitCafe 的博客
+description:
+  Bachue 在 GitCafe
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://bachue.gitcafe.io"
 twitter_username: iBachue
@@ -10,3 +10,4 @@ github_username:  bachue
 
 # Build settings
 markdown: kramdown
+highlighter: pygments
