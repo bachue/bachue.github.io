@@ -155,7 +155,7 @@ pid_t wait(int *status);
 pid_t waitpid(pid_t pid, int *status, int options);
 {% endhighlight %}
 
-wait 和 waitpid 很像，只是 wait 不指定 PID，任何一个子进程结束都会导致 wait() 返回，在大型应用程序中通过 wait() 来监控子进程状态是不明智的，因为并不能确定此时返回的子进程是否与预想的一致，在多线程程序更是如此，一般总是推荐用 waitpid() 来监控指定 PID 的进程。
+wait() 和 waitpid() 很像，只是 wait() 不指定 PID，任何一个子进程结束都会导致 wait() 返回，在大型应用程序中通过 wait() 来监控子进程状态是不明智的，因为并不能确定此时返回的子进程是否与预想的一致，在多线程程序更是如此，一般总是推荐用 waitpid() 来监控指定 PID 的进程。
 
 waitpid() 也能达成类似于 wait() 的效果，因为第一个参数 pid 还可以有其他语义：
 
@@ -217,7 +217,7 @@ execl("/bin/sh", "sh", "-c", command, (char *) NULL);
 
 在 UNIX 中，所有进程都会默认打开三个文件描述符，STDIN 表示标准输入，STDOUT 表示标准输出，STDERR 表示错误输出。
 
-而在 fork() 时，子进程会默认共享父进程所有文件描述符。例如父进程的 STDIN 来自于键盘输入，STDOUT 将输出到 Terminal，STDERR 将输出到某个日志文件，那么子进程也会同样如此。
+而在 fork() 时，子进程会默认共享父进程所有文件描述符。假设现在父进程的 STDIN 来自于键盘输入，STDOUT 将输出到 Terminal，STDERR 将输出到某个日志文件，那么子进程也会同样如此。
 
 如果父进程想要将自己的数据输入到子进程中，或是获取子进程通过 STDOUT 或 STDERR 输出的数据，就必须通过重定向来解决。
 
@@ -279,7 +279,7 @@ dup2(pfd[1], STDOUT_FILENO);
 
 之后，子进程的标准输出不再是 Terminal 而是管道的写入端，此时子进程 ls 输出的当前目录的文件列表可以在父进程中通过读取管道的读取端来获取。
 
-子进程所做的事情还远远不止如此，它还可以关闭子进程不需要的文件描述符。
+子进程可以做的事情还远远不止如此，它还可以关闭子进程不需要的文件描述符。
 
 为何要关闭这些文件描述符？例如现在有父子两个进程，父进程将数据通过管道输入到子进程处理，子进程等待父进程关闭管道表示数据输入结束，然后处理数据给出结果，父进程获取子进程返回的结果后自然返回，这本来是可以正常工作的。
 但如果现在父进程在 fork() 了子进程后还额外启动了一个长期执行的 Daemon 进程，并且没有在这个 Daemon 进程中关闭管道，那么 Daemon 进程同样共享了管道的写入端，当父进程关闭管道后，子进程并不会收到管道关闭时的 EOF 信息，因为管道并没有被完全关闭，因此子进程继续等待数据输入，而父进程会等待子进程结束。
@@ -355,7 +355,7 @@ int unsetenv(const char *name);
 
 我们重新回到 Ruby 这个话题。
 
-Ruby 提供了执行 Shell 命令的底层方法（其实也提供了 fork 和 exec，但本文不再讨论与 C 平级的层次）Kernel.spawn。
+Ruby 提供了执行 Shell 命令的底层方法 Kernel.spawn（其实也提供了 fork 和 exec，但本文不再讨论与 C 平级的层次）。
 它实现了大量 C 中调用子进程时可能需要的功能。
 
 {% highlight text linenos %}
@@ -431,12 +431,12 @@ options: hash
 在最后的参数中传入 Hash 则代表更多语义，
 如果传入的 unsetenv_others: true 表示清理其他环境变量，pgroup: true 表示创建新的进程组，
 当 key 是 rlimit_[某种 resource] 时表示对子进程 rlimit 的设定。
-如果 key 是 in，out，err 或者某个数字时表示 STDIN，STDOUT，STDERR 或是 数组表示的文件描述符被重定向。
-而对应的 value 可以设置为 in，out，err，某个数字，某个文件路径或某个数组，数组的第一个元素表示文件路径，第二个参数表示打开模式，第三个参数表示新创建的文件的权限。
+如果 key 是 in，out，err 或者某个数字时分别表示 STDIN，STDOUT，STDERR 或是数字表示的文件描述符被重定向。
+而对应的 value 可以设置为 in，out，err，某个数字，某个文件路径或某个数组，如果是数组，第一个元素表示文件路径，第二个参数表示打开模式，第三个参数表示新创建的文件的权限。
 value 也可以是 :close 表示关闭该描述符。
 当传入 close_others: true 时会关闭 3 以上的所有文件描述符。而传入 chdir 表示子进程当前目录切换到指定路径。
 
-由此可以看到，之前模版中的 C 代码在这里只要调用一个 Ruby 的方法，设置些选项就可以全部做到了。
+由此可以看到，之前模版中的 C 代码在这里只要调用一个 Ruby 的方法，设置些选项就可以全部做到了。这就是 Ruby 作为高级语言的魅力。
 
 {% highlight ruby linenos %}
 pid = Kernel.spawn({"FOO"=>"BAR"}, command, \
