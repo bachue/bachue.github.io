@@ -88,7 +88,7 @@ ensure
 end
 {% endhighlight %}
 
-确定要这么复杂吗？
+确定要这么复杂吗？而且不检查 `stty -g` 的返回结果真的好么？
 
 * 通过这样的办法在命令行中调用 LESS
 
@@ -436,3 +436,156 @@ options: hash
 value 也可以是 :close 表示关闭该描述符。
 当传入 close_others: true 时会关闭 3 以上的所有文件描述符。而传入 chdir 表示子进程当前目录切换到指定路径。
 
+由此可以看到，之前模版中的 C 代码在这里只要调用一个 Ruby 的方法，设置些选项就可以全部做到了。
+
+{% highlight ruby linenos %}
+pid = Kernel.spawn({"FOO"=>"BAR"}, command, \
+                   close_others: true, pgroup: true, \
+                   err: :out, in: "/dev/null")
+_, status = Process.wait2 pid
+status.exitstatus
+=> 0
+{% endhighlight %}
+
+比如上面这段 Ruby 代码可以设置环境变量 FOO 为 BAR，执行命令前自动关闭所有文件描述符，创建新的进程组，重定向 STDERR 与 STDOUT 一致，而 STDIN 被重定向到 /dev/null。
+
+不过 Kernel.spawn 默认不会等待子进程结束，而是父进程和子进程并行执行，如果需要等待子进程，可以调用 Process.wait2，它可以等待指定的 PID 的进程结束，并返回 Process::Status 对象封装进程状态。
+
+除此以外，Ruby 还提供了大量标准库方法封装了 Kernel.spawn 的功能，它们都可以接受与 Kernel.spawn 一样的参数，这意味着与 Kernel.spawn 一样非常灵活，但同时也实现了更多功能，使用也会更加方便。
+
+IO.popen 在 IO 层面上定义了执行子进程的方法，并且还可以将子进程的 STDIN 和 STDOUT 封装成 IO 对象在回调中被使用。
+
+{% highlight text linenos %}
+IO.popen([env,] cmd, mode="r" [, opt]) → io
+IO.popen([env,] cmd, mode="r" [, opt]) {|io| block } → obj
+{% endhighlight %}
+
+接口中的 mode 定义了 IO 的打开方法，可以选择只读，只写或可读可写。
+如果定义为只读，STDOUT 会被重定向到 io 对象，如果定义为只写，STDERR 会被重定向到 io，如果定义为可读可写，二者都会被重定向到 io 对象。
+
+例如之前已经看到了这样的 worst pracices 的代码：
+
+{% highlight ruby linenos %}
+f = Tempfile.new("help")
+f.write help
+f.flush
+f.close
+system "cat #{f.path} | less"
+{% endhighlight %}
+
+可以用 IO.popen 直接取代：
+
+{% highlight ruby linenos %}
+IO.popen('less', 'w') { |io| io << help }
+{% endhighlight %}
+
+如果给 IO.popen 传入回调，就可以在回调中操作 io 对象，对它进行输入或输出，在回调执行完毕后，IO.popen 将阻塞等待子进程结束后才会返回。如果不传入回调，IO.popen 返回这个 io 对象，之后的代码将与子进程并行。
+
+IO.popen 本身不提供任何方法来获取子进程的执行状态，但 Ruby 中提供了通用了全局变量 $? 可以查询最近创建的一个子进程的状态。
+
+此外，Ruby 提供了一个 Open3 标准库来实现大量与执行 Shell 命令相关的方法。我们在这里只挑选一部分讲解：
+
+Open.capture2 很像最初演示的反引号语法，它能将子进程的 STDOUT 输出用字符串形式返回，同时返回进程状态信息。
+
+{% highlight text linenos %}
+stdout_str, status = Open3.capture2([env,] cmd... [, opts])
+{% endhighlight %}
+
+{% highlight ruby linenos %}
+o, s = Open3.capture2("factor", stdin_data: "42")
+o
+=> "42: 2 3 7\n"
+{% endhighlight %}
+
+Open3.capture2 的 opts 额外支持 stdin_data 选项表示输入到 STDIN 的字符串内容，而 binmode 选项表示是否用二进制编码传输数据（Ruby 2.0 默认编码统一为 UTF-8）。
+
+Open3.capture3 在 capture2 的基础上将 STDERR 的输出也用字符串的形式返回。
+
+{% highlight text linenos %}
+stdout_str, stderr_str, status = Open3.capture3([env,] cmd... [, opts])
+{% endhighlight %}
+
+{% highlight ruby linenos %}
+o, e, s = Open3.capture3("echo abc; sort >&2", stdin_data: "foo\nbar\nbaz\n")
+o
+=> "abc\n"
+e
+=> "bar\nbaz\nfoo\n"
+s
+=> #<Process::Status: pid 32682 exit 0>
+{% endhighlight %}
+
+Open3.pipeline 将启动多个子进程，并将前者的 STDOUT 与后者的 STDIN 连接，达到 SHELL 中管道的效果。
+
+{% highlight text linenos %}
+status_list = Open3.pipeline(cmd1, cmd2, ... [, opts])
+{% endhighlight %}
+
+{% highlight ruby linenos %}
+Open3.pipeline("sort", ["uniq", "-c"], in: "names.txt", out: "count")
+{% endhighlight %}
+
+这句语句在效果上等同于 Shell 的
+
+{% highlight ruby linenos %}
+(sort | uniq -c) < names.txt > count
+{% endhighlight %}
+
+Open3.popen3 功能更加强大，它将子进程的 STDIN，STDOUT，STDERR 全部封装成 IO 对象并返回，还可以与等待子进程的线程交互。
+
+{% highlight text linenos %}
+Open3.popen3([env,] cmd... [, opts]) {|stdin, stdout, stderr, wait_thr|
+  pid = wait_thr.pid # pid of the started process.
+  ...
+  exit_status = wait_thr.value # Process::Status object returned.
+}
+{% endhighlight %}
+
+{% highlight ruby linenos %}
+captured_stdout = ''
+captured_stderr = ''
+exit_status = Open3.popen3(ENV, 'date') {|stdin, stdout, stderr, wait_thr|
+  pid = wait_thr.pid # pid of the started process.
+  stdin.close
+  captured_stdout = stdout.read
+  captured_stderr = stderr.read
+  wait_thr.value # Process::Status object returned.
+}
+
+puts "STDOUT: " + captured_stdout
+puts "STDERR: " + captured_stderr
+puts "EXIT STATUS: " + (exit_status.success? ? 'succeeded' : 'failed')
+{% endhighlight %}
+
+可以看到上面的代码查询子进程的 PID，在回调的最后还查询了子进程的返回值（这个操作会导致阻塞直到进程结束）。
+
+此外，Ruby 还定义了一些高层方法来执行 Shell，就是在本文一开始提及的 system 和反引号语法，使用更加方便但灵活度也会相应下降。
+
+{% highlight text linenos %}
+system([env,] command... [,options]) → true, false or nil
+{% endhighlight %}
+
+system 方法可以通过返回的布尔值直接判定 Shell 命令是否执行成功，如果成功就返回 true，错误就返回 false，被信号 Kill 就返回 nil。并且它也接受与 Kernel.spawn 一样的参数，看上去还是不错的。但它必须等待子进程结束才会返回，如果发生错误，还是要通过 $? 才能获取具体的错误信息。
+
+而反引号（`）语法的方便之处在于可以直接获取 STDOUT 的输出，但是只能执行字符串而不能传入参数列表，完全无法与 STDIN 和 STDERR 交互，同样必须等待子进程结束才会返回，没有直观的方式获取进程执行状态，只能通过 $? 来获取。基于这些原因，请不要将这种语法应用在严谨的 Ruby 程序中。
+
+## 总结一下
+
+### Ruby 程序员执行 Shell 命令的常见问题
+
+* 喜欢拼装字符串由 Shell 解释执行，而不是传入参数列表由 exec 直接执行
+* 拼装字符串时从不考虑 Shell 注入的危害，以及其他使用 Shell 可能带来的副作用（很多字符在 Shell 中具有特殊意义）
+* 从不判定 Shell 命令的返回结果，总是以为它一定会成功
+* 对于 Daemon 程序，不重定向子进程的 STDOUT 和 STDERR，造成输出信息或错误信息丢失
+* 从不关闭子进程不需要的文件描述符
+
+### Ruby 程序员执行 Shell 命令的注意事项
+
+* 由于 UNIX 管道的缓存存在上限，当大量数据被写入管道而父进程来不及读取或根本没有读取，子进程有可能会阻塞
+* 如果父进程读取管道数据而子进程没有足够的数据供父进程读取，并且子进程也没有关闭管道或者结束，父进程将会阻塞
+* 因此可以在需要时采用非阻塞方法读取管道
+* 管道在用完后要立刻关闭
+* 监听大量子进程可以采用非阻塞选项 WNOHANG 检查，不要直接采用不指定 PID 的 wait 方法
+* 注意及时获取子进程结束状态以避免产生僵尸进程
+* 尽量挑选最符合实际需求的方法，不要一味使用底层方法，Ruby 标准库的封装稳定性往往更加可靠
+* 如果不立刻需要子进程返回结果，可以尽量让子进程与父进程并行执行
