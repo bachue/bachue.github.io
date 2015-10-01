@@ -5,8 +5,6 @@ date:   2015-09-15 22:12:00
 categories: ruby
 ---
 
-# Ruby 执行 Shell 命令经验谈
-
 如果你 Google "Ruby 执行 shell" 就可以看到有篇文章排名第一 [《Ruby 执行 Shell 命令的六种方法》](http://droidyue.com/blog/2014/11/18/six-ways-to-run-shell-in-ruby/)，这篇文章介绍了 Ruby 中执行 Shell 的六种方法：
 
 ### exec

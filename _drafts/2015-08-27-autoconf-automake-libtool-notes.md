@@ -5,8 +5,6 @@ date:   2015-08-27 21:24:00
 categories: unix
 ---
 
-# Autotools - A Practioner's Guide to GNU Autconf, Automake, and Libtool 读书笔记
-
 ## AutoConf
 
 ### AC_PREREQ(version)
