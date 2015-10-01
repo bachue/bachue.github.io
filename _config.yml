@@ -6,7 +6,7 @@ description:
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://bachue.gitcafe.io"
 twitter_username: iBachue
-github_username:  bachue
+github_username: Bachue
 
 # Build settings
 markdown: kramdown
