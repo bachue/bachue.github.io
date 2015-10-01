@@ -2,7 +2,7 @@
 layout: post
 title:  "Autotools - A Practioner's Guide to GNU Autconf, Automake, and Libtool 读书笔记"
 date:   2015-08-27 21:24:00
-categories: jekyll update
+categories: unix
 ---
 
 # Autotools - A Practioner's Guide to GNU Autconf, Automake, and Libtool 读书笔记

@@ -2,7 +2,7 @@
 layout: post
 title:  "Ruby 执行 Shell 命令经验谈"
 date:   2015-09-15 22:12:00
-categories: jekyll update
+categories: ruby
 ---
 
 # Ruby 执行 Shell 命令经验谈
