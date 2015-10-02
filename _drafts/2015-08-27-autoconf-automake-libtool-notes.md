@@ -40,17 +40,17 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 `AC_CHECK_HEADERS` 会通过 `autoheader` 生成 `config.h.in`，增加多个 `undef` 宏的语句。
 例如 `AC_CHECK_HEADERS([unistd.h foobar.h])` 会生成这样的 `config.h.in`：
 
-```c
+{% highlight c linenos %}
 #undef HAVE_UNISTD_H
 #undef HAVE_FOOBAR_H
-```
+{% endhighlight %}
 
 随即执行 `configure` 可以会检查 `unistd.h` 与 `foobar.h`，一般来说，前者总是存在的而后者并不存在，因此会得到这样的 `config.h`：
 
-```c
+{% highlight c linenos %}
 #define HAVE_UNISTD_H 1
 /* #undef HAVE_FOOBAR_H */
-```
+{% endhighlight %}
 
 可以看到会自动生成 `HAVE_UNISTD_H` 这样一个宏，表示 `unistd.h` 已经找到，而 `HAVE_FOOBAR_H` 没有生成是因为 `foobar.h` 没有找到。可以在源码中 include `config.h` 来使用这些宏判定某些头文件是否存在，从而灵活应对，实现跨平台性。
 
