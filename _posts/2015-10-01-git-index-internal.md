@@ -48,4 +48,10 @@ categories: git_internal
 
 索引区文件的索引条目之间并不紧密连接，而是按照 8 个字节对齐。
 
-我已经在 GitCafe 上创建了一个项目 [Play Git](https://gitcafe.com/bachue/play_git)，里面的 `read_index.rb` 可以读取并显示索引文件的内容，可以通过 `ruby read_index.rb .git/index` 来执行，有兴趣的话可以去试试看。
+我已经在 GitCafe 上创建了一个项目 [Play Git](https://gitcafe.com/bachue/play_git)，里面的 `read_index.rb` 可以读取并显示索引文件的内容，可以通过
+
+{% highlight bash linenos %}
+ruby read_index.rb .git/index
+{% endhighlight %}
+
+来执行，有兴趣的话可以去试试看。
