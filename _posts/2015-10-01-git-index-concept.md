@@ -17,7 +17,7 @@ categories: git_internal
 
 一旦用了 `git commit` 或是底层命令 `git commit-tree`，那么 Git 创建新的 commit 对象，并且将索引区里的 SHA-1 记录在 commit 对象下的 tree 对象中，这样当前分支引用的 commit - 索引区 - working tree 中该文件的 SHA-1 全都一致，该文件的修改就会被认定为已经提交。
 
-其实索引区的概念本身并不复杂，只是由于 Git 并没有什么命令能直接看到索引区的记录，因此很难给人直观的感受吧。
+其实索引区的概念本身并不复杂，只是由于 Git 并没有什么命令能直接看到索引区的记录（`git ls-files -s --debug` 已经是最接近的命令了，但依然不能完整体现索引区的内容），因此很难给人直观的感受吧。
 
 不过我之所以想要在一个面向新手的教程中提及索引区的概念，是因为在 Git 中，很多命令的功能的精确描述就与索引区有关，例如：
 
@@ -48,3 +48,5 @@ categories: git_internal
 可以看到，使用索引区来解释 Git 命令的功能会比一般的通俗解释更佳清晰明白，但是需要观众完全理解 Git objects 和 索引区的概念并且还要费点脑筋。
 
 所以后来还是在教程中采用了通俗易懂的（但不精确的）概念来描述 `git reset` 和 `git checkout` 的含义，而将精确的描述留在了这篇 Blog 中。
+
+如果您想了解 Git 索引区内部更多实现细节，可以阅读我的下一篇 Blog [《Git Internal - 读取 Git 中的索引区》](/git_internal/2015/10/01/git-index-internal.html)。
