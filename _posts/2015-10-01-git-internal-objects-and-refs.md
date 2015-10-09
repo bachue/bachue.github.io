@@ -13,7 +13,7 @@ Git Internal 将作为一个系列来探究 Git 中文件的存储格式和网�
 
 `objects/` 目录下存储 Git 所有对象文件，对于每个 object，都以它的 SHA-1 的前两位为所在目录，后 18 位为文件名，相当于建立了一层简单的索引。Git 一共有四种对象，commit，tree，blob 和 annotated tag。它们的关系是这样的，annotated tag 记录 commit 的 SHA-1，commit 记录 tree 对象的所在位置，tree 是 Git 中一个目录的所有 entry 的集合，对于每一个 entry，如果是文件，记录文件的 blob 对象的 SHA-1，如果是目录，记录该目录的 tree 对象的 SHA-1，如果是子模块，记录子模块的 commit 对象的 SHA-1。blob 对象记录所有被 Git 跟踪的文件的内容。
 
-每个 object 文件都会被 deflate 方法压缩，解压后，数据的一开始是自身的类型名称，名称也只有四种，commit，tree，blob，tag，随后空一格，然后紧跟数据部分的长度的字符串形式，之后会有一个 `\0` 字符分割元信息和后面的数据主体部分，例如 `tree 313\x00`，`tag 132\x00` 分别表示一个长 313 字节的 tree 对象和一个长 132 字节的 annotated tag 对象。
+每个 object 文件都会被 deflate 方法压缩，解压后，数据的一开始是自身的类型名称，名称也只有四种，commit，tree，blob，tag，随后空一格，然后紧跟数据部分的长度的字符串形式，之后会有一个 `\0` 字符分割元信息和后面的数据主体部分，例如 `tree 313\0`，`tag 132\0` 分别表示一个长 313 字节的 tree 对象和一个长 132 字节的 annotated tag 对象。
 
 至于数据的主体部分，不同的 object 类型有不同的格式，查看 Git Object 内容的命令是 `git cat-file -p [refs or sha-1]`。首先先来看下 annotated tag 的格式：
 
@@ -47,7 +47,7 @@ committer [Author Name] <[Author Email]> [Timestamp] [Timezone]
 Git 通过 commit 可以找到 Git Repo 根目录的 tree 对象，tree 对象是 Git object 中少有的二进制格式（`git cat-file -p` 会美化 tree 对象的显示结果，使之变成可读的文本），里面记录了一层目录中所有 entry 的信息，它的格式是：
 
 {% highlight text linenos %}
-[八进制文件权限] [文件名]\x00[Blob, Commit or Tree SHA-1 二进制]
+[八进制文件权限] [文件名]\0[Blob, Commit or Tree SHA-1 二进制]
 {% endhighlight %}
 
 entry 之间没有任何标志字符连接，那是因为所有 SHA-1 的二进制格式就是 20 个字节，无需通过其它手段分割。所有 entry 都会通过文件名排序。
