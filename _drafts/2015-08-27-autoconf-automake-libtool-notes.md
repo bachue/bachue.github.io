@@ -70,6 +70,10 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 类似的宏还有 `AC_PROG_INSTALL`，`AC_PROG_INSTALL`，`AC_PROG_LEX`，`AC_PROG_YACC`，`AC_PROG_SED`，`AC_PROG_AWK` 等等。此类宏不仅会检查对应的工具的存在性，还会生成相应的 `Autoconf` 变量可以用在 `Makefile.in` 中。
 `autoscan` 在生成 `configure.scan` 的时候也会根据源码中的文件后缀名来选择应该生成的宏去检查相应的工具的存在。
 
+### AC_PROG_RANLIB
+
+只要有任何库被编译，就会要求使用这个宏。
+
 ### AC_CHECK_PROG(variable, prog-to-check-for, value-if-found, [value-if-not-found], [path], [reject])
 
 自定义检查宏，检查 `prog-to-check-for` 的存在性，如果存在，设置 `variable` 为 `value-if-found`，否则设置为 `value-if-not-found`，此外 `value-if-found` 或 `value-if-not-found` 如果被设置，也会被显示在 `configure` 的输出中。`reject` 相当于黑名单，通常用绝对路径。
@@ -116,6 +120,24 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 #### SUBDIRS =
 
 指出包含 Makefile 的子目录。
+
+#### CLEANFILES =
+
+指出所有应该被 `make clean` 删除的文件。
+
+#### Prefixes
+
+##### noinst_
+
+指出所有需要被 build 但不需要被安装的程序。
+
+##### check_
+
+指出所有只需要被 `make check` build 用于测试单不需要被安装的程序。
+
+##### EXTRA_
+
+指出所有可以被条件 build 的程序
 
 #### Primaries
 
