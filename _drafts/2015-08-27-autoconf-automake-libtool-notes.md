@@ -127,6 +127,14 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 
 #### Prefixes
 
+##### bin_
+
+需要被生成的可执行程序
+
+##### lib_
+
+需要被生成的库
+
 ##### noinst_
 
 指出所有需要被 build 但不需要被安装的程序。
@@ -186,3 +194,21 @@ C 编译器选项
 ##### ltlibrary_LIBADD
 
 libtool 链接器对象 .lo 和静态链接库 .la
+
+#### Modifiers
+
+##### dist
+
+将被 `make dist` 包含在发布的包里的文件
+
+##### nodist
+
+将不被 `make dist` 包含在发布的包里的文件
+
+##### nobase
+
+将在发布的文件里保留文件路径
+
+##### notrans
+
+对于 man 的 PLV 文件将不需要被改名（即不需要在安装时将 .man 文件改名为 .N(0, 1, 2)）
