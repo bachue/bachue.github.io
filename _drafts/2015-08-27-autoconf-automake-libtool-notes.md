@@ -21,7 +21,7 @@ categories: unix
 这个宏其实只是一个防呆测试，防止 `configure` 命令找到错误的源代码目录（例如用户传入了错误的 `--srcdir` 参数）。
 因此，该方法尝试搜索源码目录中一个独有的源码文件，通过检测它的存在性来确定源码目录是否正确。
 
-#### AC_CONFIG_XXXS(tag..., [commands], [init-cmds])
+### AC_CONFIG_XXXS(tag..., [commands], [init-cmds])
 
 Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADERS`，`AC_CONFIG_COMMANDS`，`AC_CONFIG_LINKS`，此类宏接受一组文件或者标签。`configure` 脚本负责为他们通过模版生成实际的文件
 （有些老版本的 Autconf 还在用 `AC_CONFIG_HEADER` 宏，这个宏没有它的复数版本更强大）。
@@ -34,6 +34,14 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 例如只要写了 `AC_CONFIG_COMMANDS([abc], [echo "Testing $mypkgname"], [mypkgname=$PACKAGE_NAME])`，
 每次执行 `config.status` 的时候会自动执行 `abc` 命令来显示 `Testing test` 的字样。
 可以通过 `config.status --help` 看到 `config.status` 支持 `abc` 这样一条命令。因此通过执行 `config.status abc` 也可以直接显示 `Testing test` 的字样。
+
+### AC_CONFIG_SUBDIRS(dir1[ dir2 ... dirN])
+
+声明子项目的所在目录
+
+### AC_CONFIG_MACRO_DIR(macro-dir)
+
+声明一个目录包含所有由 `aclocal` 生成的 aclocal.m4 文件，供 `autoconf` 读取。
 
 ### AC_CHECK_HEADERS(header-file..., [action-if-found], [action-if-not-found], [includes = 'default-includes'])
 
@@ -125,6 +133,10 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 
 指出所有应该被 `make clean` 删除的文件。
 
+#### EXTRA_DIST
+
+需要被额外发布的文件
+
 #### Prefixes
 
 ##### bin_
@@ -175,6 +187,10 @@ Autoconf 有四种实例化宏，分别是 `AC_CONFIG_FILES`，`AC_CONFIG_HEADER
 
 #### POV
 
+##### product_LDADD
+
+额外的 object 文件
+
 ##### product_CPPFLAGS
 
 C 预编译器选项
@@ -212,3 +228,10 @@ libtool 链接器对象 .lo 和静态链接库 .la
 ##### notrans
 
 对于 man 的 PLV 文件将不需要被改名（即不需要在安装时将 .man 文件改名为 .N(0, 1, 2)）
+
+## Libtool
+
+#### LT_INIT(options)
+
+初始化 libtool，接受 dlopen，disable-fast-install，shared，disable-shared，static，disable-static，pic，no-pic 等选贤。
+
