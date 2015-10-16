@@ -54,10 +54,10 @@ entry 之间没有任何标志字符连接，那是因为所有 SHA-1 的二进�
 
 至于 blob 是最简单的，里面直接记录了整个文件的内容，注意，在 Git 使用本文所介绍的方法记录数据时，Git 不会使用 patch 技术，即使只是对文件作出微量的修改，也会导致一个包含文件新版本完整内容的 blob 对象被创建，因此对容量会有一定的浪费。在之后介绍打包存储格式时还会有两种 patch 技术被引进，会大幅降低存储浪费，同时读取更为高效，敬请期待。
 
-我已经在 GitCafe 上创建了一个项目 [Play Git](https://gitcafe.com/bachue/play_git)，里面的 `read_object.rb` 可以读取并解析 object 文件的内容使之成为 Ruby 对象，可以通过
+我已经在 GitCafe 上创建了一个项目 [Play Git](https://gitcafe.com/bachue/play_git)，里面的 `read_object_file.rb` 可以读取并解析 object 文件的内容使之成为 Ruby 对象，可以通过
 
 {% highlight bash linenos %}
-ruby read_object.rb .git/objects/[object file]
+ruby read_object_file.rb .git/objects/[object file]
 {% endhighlight %}
 
 来执行，有兴趣的话可以去试试看。
